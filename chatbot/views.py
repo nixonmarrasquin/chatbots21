@@ -2,27 +2,41 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils import timezone
-from .models import CabeceraChat, DetalleChat
+from django.db import connections
+from .models import CabeceraChat, DetalleChat, CodigoOTP
 import google.generativeai as genai
+import random
+import string
+import os
 
-# Configura la API key de Gemini
+
+BUSINESS_INFO_FILE_PATH = 'C:/Users/Administrador/Desktop/chatbot_project/chatbot/static/chatbot/business_info.txt'
 genai.configure(api_key="AIzaSyA-QJQVpjhveWOTvoiBLttVOqgM2h-XI14")
-
-# Inicializa el modelo
 model = genai.GenerativeModel('gemini-pro')
 
+def load_business_info():
+    try:
+        with open(BUSINESS_INFO_FILE_PATH, 'r', encoding='utf-8') as file:
+            return file.read()
+    except FileNotFoundError:
+        return "Información del negocio no disponible."
+    
+def generate_otp():
+    return ''.join(random.choices(string.digits, k=4))
 
-# Información sobre tu negocio
-BUSINESS_INFO = """
-Nombre del negocio: Electrónica Siglo 21
-Descripción: Mayorista de Tecnología
-Productos/Servicios: Productos de tecnología, como electrodomésticos, computadoras, software, hardware
-Horario de atención: Lunes a Viernes de 9am a 6pm
-Ubicación: Guayaquil Cdla. La Garzota...
-Contacto: 099999999
-Políticas importantes: Envios gratis
-Ser cliente / ser distribuidor: Para ser cliente de Siglo 21 debe llenar el formulario en la sección de Ser distribuidor para luego poder calificarlo como cliente. Puede ingresar al siguiente enlace https://siglo21.net/solicitud-de-registro/
-"""
+def get_client_name(codigo_cliente):
+    with connections['default'].cursor() as cursor:
+        # Si el código comienza con "C", lo quitamos
+        if codigo_cliente.startswith('C'):
+            codigo_cliente = codigo_cliente[1:]
+        
+        cursor.execute("""
+            SELECT CardName 
+            FROM webs2123.s21_users 
+            WHERE CardCode = %s OR CardCode = %s
+        """, [codigo_cliente, 'C' + codigo_cliente])
+        result = cursor.fetchone()
+        return result[0] if result else None
 
 @csrf_exempt
 def chatbot(request):
@@ -33,58 +47,113 @@ def chatbot(request):
             return JsonResponse({'error': 'No message provided'}, status=400)
 
         try:
-            # Verifica si hay un idCabeceraChat en la sesión
+            # Cargar la información del negocio desde el archivo
+            business_info = load_business_info()
+
             cabecera_id = request.session.get('cabecera_id')
+            conversation_state = request.session.get('conversation_state', 'initial')
 
-            if cabecera_id:
-                try:
-                    cabecera = CabeceraChat.objects.get(idCabeceraChat=cabecera_id)
-                    print(f"Usando cabecera existente de la sesión: {cabecera_id}")
-                except CabeceraChat.DoesNotExist:
-                    return JsonResponse({'error': 'CabeceraChat not found'}, status=404)
-            else:
-                # Si no hay cabecera en la sesión, crea una nueva cabecera
+            if not cabecera_id or conversation_state == 'initial':
                 cabecera = CabeceraChat.objects.create(user="user", fecha=timezone.now())
-                request.session['cabecera_id'] = cabecera.idCabeceraChat  # Almacena el ID en la sesión
+                request.session['cabecera_id'] = cabecera.idCabeceraChat
                 cabecera_id = cabecera.idCabeceraChat
-                print(f"Nueva cabecera creada: {cabecera_id} y almacenada en la sesión")
-
-            # Guarda el mensaje del usuario en DetalleChat
+                # Enviar mensaje inicial
+                chatbot_reply = "Hola, ¿eres cliente de Siglo 21?"
+                request.session['conversation_state'] = 'waiting_for_client_status'
+                DetalleChat.objects.create(
+                    idCabeceraChat=cabecera,
+                    mensaje=chatbot_reply,
+                    idTipo='0',
+                    fechaMensaje=timezone.now()
+                )
+                return JsonResponse({'reply': chatbot_reply, 'cabecera_id': cabecera_id})
+            else:
+                cabecera = CabeceraChat.objects.get(idCabeceraChat=cabecera_id)
+            
+            # Guarda el mensaje del usuario
             DetalleChat.objects.create(
                 idCabeceraChat=cabecera,
                 mensaje=user_input,
-                idTipo='1',  # 1 para el mensaje del usuario
+                idTipo='1',
                 fechaMensaje=timezone.now()
             )
-            print(f"Mensaje del usuario guardado: {user_input}")
 
-            # Crea un prompt que incluye la información del negocio y la pregunta del usuario
-            prompt = f"""Eres un asistente virtual para el siguiente negocio. 
-            Información del negocio:
-            {BUSINESS_INFO}
-            
-            Instrucciones:
-            1. Responde únicamente a preguntas relacionadas con la información proporcionada sobre el negocio.
-            2. Si la pregunta no está relacionada con el negocio, responde cortésmente que solo puedes proporcionar información sobre el negocio.
-            3. Sé conciso y directo en tus respuestas.
-            4. Responde únicamente en español.
-            5. No respondas con groserías ni con faltas de respeto
-            Pregunta del cliente: {user_input}
+            # Maneja el flujo de conversación
+            if conversation_state == 'waiting_for_client_status':
+                if user_input.lower() in ['sí', 'si', 'yes', 'afirmativo']:
+                    chatbot_reply = "Por favor, proporciona tu RUC o Cédula:"
+                    request.session['conversation_state'] = 'waiting_for_code'
+                else:
+                    chatbot_reply = "Entiendo. ¿En qué más puedo ayudarte con respecto a Electrónica Siglo 21?"
+                    request.session['conversation_state'] = 'general_conversation'
+            elif conversation_state == 'waiting_for_code':
+                codigo_cliente = user_input.strip()
+                
+                # Verificar si el cliente está registrado
+                client_name = get_client_name(codigo_cliente)
+                
+                if client_name:
+                    # Generar y guardar el código OTP
+                    codigo_otp = generate_otp()
+                    CodigoOTP.objects.create(
+                        codigo_cliente=codigo_cliente,
+                        codigo_otp=codigo_otp
+                    )
+                    
+                    chatbot_reply = f"Se ha enviado un código OTP a tu correo electrónico. Por favor, ingresa el código de 4 dígitos que has recibido."
+                    request.session['conversation_state'] = 'waiting_for_otp'
+                    request.session['codigo_cliente'] = codigo_cliente
+                else:
+                    chatbot_reply = "No estás registrado como cliente. Por favor, verifica tu RUC o Cédula y vuelve a intentarlo."
+                    request.session['conversation_state'] = 'initial'  # Reinicia el estado de la conversación
+            elif conversation_state == 'waiting_for_otp':
+                user_otp = user_input.strip()
+                codigo_cliente = request.session.get('codigo_cliente')
+                
+                # Verificar el código OTP
+                try:
+                    otp_record = CodigoOTP.objects.filter(
+                        codigo_cliente=codigo_cliente,
+                        codigo_otp=user_otp
+                    ).latest('fecha_generacion')
+                    
+                    # Obtener el nombre del cliente
+                    client_name = get_client_name(codigo_cliente)
+                    
+                    if client_name:
+                        chatbot_reply = f"Código OTP verificado correctamente. Bienvenido, {client_name}. ¿En qué puedo ayudarte hoy?"
+                    else:
+                        chatbot_reply = f"Código OTP verificado correctamente, pero no pude encontrar tu nombre en nuestros registros. ¿En qué puedo ayudarte hoy?"
+                    
+                    request.session['conversation_state'] = 'general_conversation'
+                except CodigoOTP.DoesNotExist:
+                    chatbot_reply = "El código OTP ingresado no es válido. Por favor, intenta nuevamente."
+            else:
+                # Conversación general usando Gemini
+                prompt = f"""Eres un asistente virtual para el siguiente negocio. 
+                Información del negocio:
+                {business_info}
+                
+                Instrucciones:
+                1. Responde únicamente a preguntas relacionadas con la información proporcionada sobre el negocio.
+                2. Si la pregunta no está relacionada con el negocio, responde cortésmente que solo puedes proporcionar información sobre el negocio.
+                3. Sé conciso y directo en tus respuestas.
+                4. Responde únicamente en español.
+                5. No respondas con groserías ni con faltas de respeto
+                Pregunta del cliente: {user_input}
 
-            Respuesta:"""
+                Respuesta:"""
 
-            # Genera la respuesta usando Gemini
-            response = model.generate_content(prompt)
-            chatbot_reply = response.text
+                response = model.generate_content(prompt)
+                chatbot_reply = response.text
 
-            # Guarda la respuesta del chatbot en DetalleChat
+            # Guarda la respuesta del chatbot
             DetalleChat.objects.create(
                 idCabeceraChat=cabecera,
                 mensaje=chatbot_reply,
-                idTipo='0',  # 0 para la respuesta del chatbot
+                idTipo='0',
                 fechaMensaje=timezone.now()
             )
-            print(f"Respuesta del chatbot guardada: {chatbot_reply}")
             
             return JsonResponse({'reply': chatbot_reply, 'cabecera_id': cabecera_id})
         except Exception as e:
@@ -95,3 +164,7 @@ def chatbot(request):
 
 def chatbot_page(request):
     return render(request, 'chatbot.html')
+
+def dashboard_page(request):
+    print("Se está llamando a la vista del dashboard")
+    return render(request, 'dashboard.html')

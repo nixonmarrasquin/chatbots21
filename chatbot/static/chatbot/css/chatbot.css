@@ -1,0 +1,211 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+#end-chat-button {
+    color: white;
+    background-color: red;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    margin: 10px;
+    border-radius: 5px;
+}
+
+#chatbot-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    text-align: center;
+    line-height: 60px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+#chatbot-container {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transform: scale(0);
+    opacity: 0;
+}
+
+#chatbot-container.visible {
+    transform: scale(1);
+    opacity: 1;
+}
+
+#chatbot-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#chatbot-messages {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #f1f1f1;
+}
+
+#chatbot-messages div {
+    margin: 10px 0;
+    display: flex;
+}
+
+.chat-message {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+#chatbot-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+#chatbot-options button {
+    padding: 4px;
+    background-color: white;
+    color: red;
+    border: 1px solid red; 
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    display: block; 
+}
+
+#chatbot-input {
+    display: flex;
+    padding: 10px;
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+}
+
+#chatbot-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none; /* Asegura que no se vea un borde de enfoque no deseado */
+    box-sizing: border-box; /* Hace que el padding se incluya en el tamaño total del input */
+    width: 100%; /* Asegura que el input ocupe todo el ancho disponible */
+    cursor: text; /* Muestra el cursor de texto para que sea más evidente que es un campo de entrada */
+}
+
+#chatbot-input button {
+    margin-left: 10px;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f1f1f1;
+}
+
+.typing-indicator span {
+    height: 10px;
+    width: 10px;
+    float: left;
+    margin: 0 1px;
+    background-color: #9E9EA1;
+    display: block;
+    border-radius: 50%;
+    opacity: 0.4;
+}
+
+.typing-indicator span:nth-of-type(1) {
+    animation: 1s blink infinite 0.3333s;
+}
+
+.typing-indicator span:nth-of-type(2) {
+    animation: 1s blink infinite 0.6666s;
+}
+
+.typing-indicator span:nth-of-type(3) {
+    animation: 1s blink infinite 0.9999s;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Estilos para el mensaje emergente */
+#toast-message {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1001;
+}
+
+#toast-message.show {
+    opacity: 1;
+}
+
+.product-results {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.product-results p {
+    margin: 5px 0;
+}
+
+.user-message {
+    background-color: #ed9e98; /* Color de fondo para el usuario */
+    align-self: flex-end; /* Alinea a la derecha */
+    border-bottom-right-radius: 0;
+    margin-left: auto; /* Asegura que el mensaje se alinee a la derecha */
+}
+
+.chatbot-message {
+    background-color: white; /* Fondo del chatbot */
+    align-self: flex-start; /* Alinea a la izquierda */
+    border-bottom-left-radius: 0;
+}
+

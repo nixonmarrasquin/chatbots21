@@ -17,3 +17,11 @@ class DetalleChat(models.Model):
 
     class Meta:
         db_table = 'detallechat'
+
+class CodigoOTP(models.Model):
+    codigo_cliente = models.CharField(max_length=13)  # RUC o Cédula
+    codigo_otp = models.CharField(max_length=4)       # Código OTP
+    fecha_generacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'codigootp'  # Cambiado para evitar la duplicación del nombre del esquema

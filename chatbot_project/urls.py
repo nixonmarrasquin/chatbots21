@@ -22,4 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', chatbot_views.chatbot_page, name='home'),  # Define la ruta para la página principal
     path('chatbot/', include('chatbot.urls')),  # Mantén la ruta del chatbot
+    path('dashboard/', chatbot_views.dashboard_page, name='dashboard'),
+
 ]
