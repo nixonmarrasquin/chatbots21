@@ -4,7 +4,7 @@ body {
 
 #end-chat-button {
     color: white;
-    background-color: red;
+    background-color: #E41F13;
     padding: 10px 20px;
     border: none;
     cursor: pointer;
@@ -79,6 +79,10 @@ body {
     border-radius: 10px;
     line-height: 1.5;
     word-wrap: break-word;
+    overflow-wrap: break-word; /* Add this line */
+    word-break: break-word; /* Add this line */
+    hyphens: auto; /* Add this line */
+    width: fit-content;
 }
 
 #chatbot-options {
@@ -209,3 +213,14 @@ body {
     border-bottom-left-radius: 0;
 }
 
+.user-message-container {
+    display: flex;
+    justify-content: flex-end; /* Alinea el mensaje del usuario a la derecha */
+    margin: 10px 0; /* Ajusta el margen según sea necesario */
+}
+
+.chatbot-message-container {
+    display: flex;
+    justify-content: flex-start; /* Alinea el mensaje del chatbot a la izquierda */
+    margin: 10px 0; /* Ajusta el margen según sea necesario */
+}

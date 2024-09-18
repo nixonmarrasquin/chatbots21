@@ -100,6 +100,9 @@ function addMessage(sender, text) {
     const messagesContainer = document.getElementById('chatbot-messages');
     const messageElement = document.createElement('div');
 
+    // Añadir clase de contenedor específica según el remitente
+    messageElement.classList.add(sender === 'Tú' ? 'user-message-container' : 'chatbot-message-container');
+
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('chat-message');
 
