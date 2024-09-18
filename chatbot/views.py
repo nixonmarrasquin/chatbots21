@@ -11,6 +11,7 @@ genai.configure(api_key="AIzaSyA-QJQVpjhveWOTvoiBLttVOqgM2h-XI14")
 # Inicializa el modelo
 model = genai.GenerativeModel('gemini-pro')
 
+
 # Información sobre tu negocio
 BUSINESS_INFO = """
 Nombre del negocio: Electrónica Siglo 21
@@ -20,6 +21,7 @@ Horario de atención: Lunes a Viernes de 9am a 6pm
 Ubicación: Guayaquil Cdla. La Garzota...
 Contacto: 099999999
 Políticas importantes: Envios gratis
+Ser cliente / ser distribuidor: Para ser cliente de Siglo 21 debe llenar el formulario en la sección de Ser distribuidor para luego poder calificarlo como cliente. Puede ingresar al siguiente enlace https://siglo21.net/solicitud-de-registro/
 """
 
 @csrf_exempt

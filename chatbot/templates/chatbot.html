@@ -9,6 +9,16 @@
             font-family: Arial, sans-serif;
         }
 
+        #end-chat-button {
+            color: white;
+            background-color: red;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 5px;
+        }
+
         #chatbot-button {
             position: fixed;
             bottom: 20px;
@@ -110,7 +120,12 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            outline: none; /* Asegura que no se vea un borde de enfoque no deseado */
+            box-sizing: border-box; /* Hace que el padding se incluya en el tamaño total del input */
+            width: 100%; /* Asegura que el input ocupe todo el ancho disponible */
+            cursor: text; /* Muestra el cursor de texto para que sea más evidente que es un campo de entrada */
         }
+
 
         #chatbot-input button {
             margin-left: 10px;
@@ -189,18 +204,19 @@
         }
 
         .user-message {
-            background-color: #ed9e98; 
-            align-self: flex-end; 
+            background-color: #ed9e98; /* Color de fondo para el usuario */
+            align-self: flex-end; /* Alinea a la derecha */
             border-bottom-right-radius: 0;
-            margin-left: auto; /* Mueve el mensaje del usuario hacia la derecha */
+            margin-left: auto; /* Asegura que el mensaje se alinee a la derecha */
         }
 
+
         .chatbot-message {
-            background-color: white; /* Color gris claro para el chatbot */
-            align-self: flex-start; /* Alinea el mensaje del chatbot a la izquierda */
+            background-color: white; /* Fondo del chatbot */
+            align-self: flex-start; /* Alinea a la izquierda */
             border-bottom-left-radius: 0;
         }
-        
+
     </style>
 </head>
 <body>
@@ -208,10 +224,12 @@
 
     <div id="chatbot-container">
         <div id="chatbot-header">
-            Chatbot
+            Chatbot S21
         </div>
-        <div id="chatbot-messages"></div>
-
+        <div id="chatbot-messages">
+            
+        </div>
+       
         <div id="chatbot-options">
             <button onclick="sendOption('Horario')">Horario</button>
             <button onclick="sendOption('Ubicación')">Ubicación</button>
@@ -219,8 +237,11 @@
             <button onclick="sendOption('Ser Cliente')">Ser Cliente</button>
             <button onclick="sendOption('Políticas')">Políticas</button>
         </div>
+        <button id="end-chat-button" onclick="endChat()">
+            END CHAT
+        </button>
 
-        <div id="chatbot-input">
+        <div id="chatbot-input" onclick="focusInput()">
             <input type="text" id="user-message" placeholder="Escribe un mensaje..." onkeydown="handleKey(event)">
             <button id="send-button" onclick="sendMessage()">Enviar</button>
         </div>
@@ -271,6 +292,10 @@
                 clearTimeout(toastTimeout);
             }
         }
+        function focusInput() {
+    document.getElementById('user-message').focus();
+}
+
 
         function sendMessage() {
             if (isWaitingForResponse) return;
@@ -332,13 +357,14 @@
     // Crear la burbuja del mensaje
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('chat-message');
-    messageBubble.textContent = text;
 
     // Diferenciar entre mensajes del usuario y del chatbot
     if (sender === 'Tú') {
         messageBubble.classList.add('user-message');
+        messageBubble.textContent = text; // El usuario sigue enviando texto plano
     } else {
         messageBubble.classList.add('chatbot-message');
+        messageBubble.innerHTML = text; // El chatbot puede enviar HTML
     }
 
     messageElement.appendChild(messageBubble);
@@ -387,6 +413,12 @@
             loadChatHistory();
             showToast(); // Mostrar el mensaje emergente al cargar la página
         };
+    
+        function endChat() {
+            document.getElementById('chatbot-messages').innerHTML = '';
+            document.getElementById('user-message').value = '';
+            document.getElementById('chatbot-container').classList.remove('visible');
+        }
     </script>
 </body>
 </html>
