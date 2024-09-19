@@ -166,5 +166,4 @@ def chatbot_page(request):
     return render(request, 'chatbot.html')
 
 def dashboard_page(request):
-    print("Se está llamando a la vista del dashboard")
     return render(request, 'dashboard.html')

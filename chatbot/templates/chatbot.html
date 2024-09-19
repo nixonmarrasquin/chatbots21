@@ -6,6 +6,7 @@
     <title>Chatbot Popup</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'chatbot/css/chatbot.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 </head>
 <body>
@@ -13,7 +14,11 @@
 
     <div id="chatbot-container">
         <div id="chatbot-header">
-            Chatbot S21
+            <span>Chatbot S21</span>
+            <div class="chatbot-controls">
+                <i id="minimize-chat" class="fas fa-minus" onclick="toggleChat()"></i>
+                <i id="close-chat" class="fas fa-times" onclick="endChat()"></i>
+            </div>
         </div>
         <div id="chatbot-messages">
             <!-- Mensajes se cargarán aquí -->
@@ -26,14 +31,17 @@
             <button onclick="sendOption('Ser Distribuidor')">Ser Cliente</button>
             <button onclick="sendOption('Políticas')">Políticas</button>
         </div>
-        <button id="end-chat-button" onclick="endChat()">FINALIZAR CHAT</button>
+
+        <!-- <button id="end-chat-button" onclick="endChat()">FINALIZAR CHAT</button> -->
 
         <div id="chatbot-input" onclick="focusInput()">
             <input type="text" id="user-message" placeholder="Escribe un mensaje..." onkeydown="handleKey(event)">
-            <button id="send-button" onclick="sendMessage()">Enviar</button>
+            <button id="send-button" type="button" onclick="sendMessage()">        
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
-    <div id="toast-message">Hola, puedo responder todas las dudas que tengas.</div>
+    <div id="toast-message">¡Hola! Estoy aquí para resolver tus dudas sobre Siglo 21 </div>
     <script src="{% static 'chatbot/js/chatbot.js' %}"></script>
 </body>
 </html>

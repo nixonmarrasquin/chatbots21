@@ -1,4 +1,3 @@
-// chatbot.js
 
 let isWaitingForResponse = false;
 let toastTimeout;
@@ -27,7 +26,7 @@ function showToast() {
     
     toastTimeout = setTimeout(() => {
         hideToast();
-    }, 6000);
+    }, 4000);
 }
 
 function hideToast() {
@@ -43,7 +42,9 @@ function focusInput() {
     document.getElementById('user-message').focus();
 }
 
-function sendMessage() {
+function sendMessage(event) {
+    if (event) event.preventDefault(); // Evita el comportamiento predeterminado del botón
+
     if (isWaitingForResponse) return;
 
     const messageInput = document.getElementById('user-message');
@@ -161,15 +162,12 @@ window.onload = function() {
 };
 
 function endChat() {
-    // Limpia el contenedor de mensajes y el campo de entrada
     document.getElementById('chatbot-messages').innerHTML = '';
     document.getElementById('user-message').value = '';
     document.getElementById('chatbot-container').classList.remove('visible');
 
-    // Borra el historial del chat de localStorage
     localStorage.removeItem('chatHistory');
 
-    // Recarga el historial del chat para mostrar el mensaje de bienvenida
     loadChatHistory();
 }
 
