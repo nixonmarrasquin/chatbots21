@@ -5,14 +5,17 @@ let toastTimeout;
 function toggleChat() {
     const chatbotContainer = document.getElementById('chatbot-container');
     const messageInput = document.getElementById('user-message');
+    const chatbotButton = document.getElementById('chatbot-button');
     
     chatbotContainer.classList.toggle('visible');
 
     if (chatbotContainer.classList.contains('visible')) {
         messageInput.focus();
         hideToast();
+        chatbotButton.classList.add('hidden');
     } else {
         showToast();
+        chatbotButton.classList.remove('hidden');
     }
 }
 
@@ -161,13 +164,49 @@ window.onload = function() {
     showToast();
 };
 
+
 function endChat() {
-    document.getElementById('chatbot-messages').innerHTML = '';
-    document.getElementById('user-message').value = '';
-    document.getElementById('chatbot-container').classList.remove('visible');
+    const modal = document.getElementById('confirmation-modal');
+    
+    // Mostrar el modal
+    modal.style.display = 'flex';
 
-    localStorage.removeItem('chatHistory');
+    // Acción al hacer clic en "Sí"
+    document.getElementById('confirm-yes').onclick = function() {
+        // Borrar el historial de chat
+        document.getElementById('chatbot-messages').innerHTML = '';
+        document.getElementById('user-message').value = '';
+        const chatbotContainer = document.getElementById('chatbot-container');
+        const chatbotButton = document.getElementById('chatbot-button');
+        
+        chatbotContainer.classList.remove('visible');
+        chatbotButton.classList.remove('hidden');
+        
+        // Eliminar el historial de chat almacenado
+        localStorage.removeItem('chatHistory');
+        
+        // Recargar el historial (en este caso, se muestra el mensaje inicial)
+        loadChatHistory();
 
-    loadChatHistory();
+        // Cerrar el modal
+        modal.style.display = 'none';
+    };
+
+    // Acción al hacer clic en "No"
+    document.getElementById('confirm-no').onclick = function() {
+        // Cerrar el modal sin hacer nada
+        modal.style.display = 'none';
+    };
 }
+
+// Llamar a esta función cuando se minimice el chat o se cargue la página para ocultar el modal.
+window.onload = function() {
+    loadChatHistory();
+    showToast();
+
+    // Asegurarse de que el modal esté oculto al cargar la página
+    const modal = document.getElementById('confirmation-modal');
+    modal.style.display = 'none';
+};
+
 

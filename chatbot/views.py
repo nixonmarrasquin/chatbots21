@@ -39,6 +39,7 @@ def get_client_name(codigo_cliente):
         return result[0] if result else None
 
 @csrf_exempt
+@csrf_exempt
 def chatbot(request):
     if request.method == 'POST':
         user_input = request.POST.get('message')
@@ -52,6 +53,7 @@ def chatbot(request):
 
             cabecera_id = request.session.get('cabecera_id')
             conversation_state = request.session.get('conversation_state', 'initial')
+            otp_attempts = request.session.get('otp_attempts', 0)  # Contador de intentos fallidos de OTP
 
             if not cabecera_id or conversation_state == 'initial':
                 cabecera = CabeceraChat.objects.create(user="user", fecha=timezone.now())
@@ -103,6 +105,7 @@ def chatbot(request):
                     chatbot_reply = f"Se ha enviado un código OTP a tu correo electrónico. Por favor, ingresa el código de 4 dígitos que has recibido."
                     request.session['conversation_state'] = 'waiting_for_otp'
                     request.session['codigo_cliente'] = codigo_cliente
+                    request.session['otp_attempts'] = 0  # Reiniciar el contador de intentos fallidos
                 else:
                     chatbot_reply = "No estás registrado como cliente. Por favor, verifica tu RUC o Cédula y vuelve a intentarlo."
                     request.session['conversation_state'] = 'initial'  # Reinicia el estado de la conversación
@@ -116,18 +119,24 @@ def chatbot(request):
                         codigo_cliente=codigo_cliente,
                         codigo_otp=user_otp
                     ).latest('fecha_generacion')
-                    
-                    # Obtener el nombre del cliente
+
+                    # OTP verificado correctamente
                     client_name = get_client_name(codigo_cliente)
-                    
                     if client_name:
                         chatbot_reply = f"Código OTP verificado correctamente. Bienvenido, {client_name}. ¿En qué puedo ayudarte hoy?"
                     else:
                         chatbot_reply = f"Código OTP verificado correctamente, pero no pude encontrar tu nombre en nuestros registros. ¿En qué puedo ayudarte hoy?"
-                    
+
                     request.session['conversation_state'] = 'general_conversation'
                 except CodigoOTP.DoesNotExist:
-                    chatbot_reply = "El código OTP ingresado no es válido. Por favor, intenta nuevamente."
+                    otp_attempts += 1
+                    request.session['otp_attempts'] = otp_attempts
+
+                    if otp_attempts >= 3:
+                        chatbot_reply = "Código OTP incorrecto. Lo has intentado demasiadas veces. Inténtalo más tarde."
+                        request.session['conversation_state'] = 'general_conversation'  # Cambiar a conversación general
+                    else:
+                        chatbot_reply = f"El código OTP ingresado no es válido. Te quedan {3 - otp_attempts} intentos."
             else:
                 # Conversación general usando Gemini
                 prompt = f"""Eres un asistente virtual para el siguiente negocio. 
@@ -145,7 +154,7 @@ def chatbot(request):
                 Respuesta:"""
 
                 response = model.generate_content(prompt)
-                chatbot_reply = response.text
+                chatbot_reply = response.text if response and response.text else "Lo siento, no pude generar una respuesta. Intenta otra pregunta."
 
             # Guarda la respuesta del chatbot
             DetalleChat.objects.create(
@@ -161,6 +170,7 @@ def chatbot(request):
             return JsonResponse({'error': f'Error al procesar la solicitud: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
 
 def chatbot_page(request):
     return render(request, 'chatbot.html')
