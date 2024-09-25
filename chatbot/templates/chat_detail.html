@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chats</title>
+    <title>Detalle del Chat</title>
     <style>
         body, html {
             margin: 0;
@@ -22,15 +22,21 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             overflow-y: auto;
         }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
+        .main-content {
+            width: 80%; /* Ancho fijo del contenido principal */
+            max-width: 80%; /* Evita que el ancho varíe */
+            min-width: 80%; /* Evita que el ancho sea menor */
+            padding: 20px;
+            overflow-y: auto;
+        }
+        h1, h2, h3 {
             color: #333;
         }
         .chat-list {
             list-style-type: none;
             padding: 0;
         }
+
         .chat-item {
             background-color: white;
             border-radius: 8px;
@@ -38,14 +44,17 @@
             padding: 15px;
             transition: background-color 0.3s;
         }
-        .chat-item:hover {
+
+        .chat-item:hover, .chat-item.active {
             background-color: #e0e0e0;
         }
+
         .chat-link {
             text-decoration: none;
             color: #333;
             display: block;
         }
+        
         .chat-id {
             font-weight: bold;
         }
@@ -57,7 +66,29 @@
             font-size: 12px;
             color: #999;
         }
-        .no-chats {
+        .message-list {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-item {
+            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+        .message-left {
+            align-self: flex-start;
+            background-color: #e0e0e0;
+        }
+        .message-right {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: white;
+        }
+        .no-messages, .no-chats {
             color: #666;
             font-style: italic;
         }
@@ -84,7 +115,21 @@
             {% endif %}
         </div>
         <div class="main-content">
-            <!-- Aquí iría el contenido principal de la página -->
+            <h1>Detalle del Chat</h1>
+            <h2>Chat ID: {{ chat.idCabeceraChat }}</h2>
+            <h3>Mensajes:</h3>
+            {% if mensajes %}
+                <ul class="message-list">
+                    {% for mensaje in mensajes %}
+                        <li class="message-item {% if mensaje.idTipo == '0' %}message-left{% else %}message-right{% endif %}">
+                            {{ mensaje.mensaje }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="no-messages">No hay mensajes en este chat.</p>
+            {% endif %}
+            
         </div>
     </div>
 </body>

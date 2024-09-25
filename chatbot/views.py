@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.db import connections
 from .models import CabeceraChat, DetalleChat, CodigoOTP
@@ -8,6 +8,8 @@ import google.generativeai as genai
 import random
 import string
 import os
+from datetime import timedelta
+
 
 
 BUSINESS_INFO_FILE_PATH = 'C:/Users/Administrador/Desktop/chatbot_project/chatbot/static/chatbot/business_info.txt'
@@ -23,6 +25,10 @@ def load_business_info():
     
 def generate_otp():
     return ''.join(random.choices(string.digits, k=4))
+
+# Vista para mostrar el dashboard con todos los chats
+
+
 
 def get_client_name(codigo_cliente):
     with connections['default'].cursor() as cursor:
@@ -71,6 +77,8 @@ def chatbot(request):
                 return JsonResponse({'reply': chatbot_reply, 'cabecera_id': cabecera_id})
             else:
                 cabecera = CabeceraChat.objects.get(idCabeceraChat=cabecera_id)
+                cabecera.ultimo_chat = timezone.now() - timedelta(hours=5)
+                cabecera.save()
             
             # Guarda el mensaje del usuario
             DetalleChat.objects.create(
@@ -172,8 +180,20 @@ def chatbot(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+def get_chats():
+    return CabeceraChat.objects.order_by('-ultimo_chat')
+
 def chatbot_page(request):
     return render(request, 'chatbot.html')
 
 def dashboard_page(request):
-    return render(request, 'dashboard.html')
+    # Ordena los chats por fecha de más reciente a más antigua
+    chats = CabeceraChat.objects.order_by('-ultimo_chat')
+    return render(request, 'dashboard.html', {'chats': chats})
+
+def chat_detail(request, chat_id):
+    chat = get_object_or_404(CabeceraChat, idCabeceraChat=chat_id)
+    mensajes = chat.detallechat_set.all()
+    chats = get_chats()
+    return render(request, 'chat_detail.html', {'chat': chat, 'mensajes': mensajes, 'chats': chats})
+
